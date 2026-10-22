@@ -4,6 +4,8 @@ This diagram shows the smallest complete path. The local deterministic path is t
 reference contract; the AWS path exercises the same metadata boundary through an
 event-driven deployment.
 
+![Evidence Ledger architecture](architecture.svg)
+
 ```mermaid
 flowchart LR
     Inputs["Synthetic input files"] --> Local["Local deterministic pipeline"]
