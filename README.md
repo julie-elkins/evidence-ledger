@@ -60,3 +60,37 @@ AWS-specific decisions are recorded in
 
 The deployment runbook includes the synthetic failure probe used to verify retries and
 DLQ delivery. The probe is disabled by default and is never intended for real evidence.
+
+## Portfolio walkthrough
+
+The shortest useful review path is:
+
+1. Run the deterministic local demo and verify its package.
+2. Read the architecture diagram to see the local contract and AWS event path.
+3. Run the bounded AWS demo against an explicitly selected account and region.
+4. Inspect the duplicate-event refusal and, if needed, run the synthetic retry/DLQ check.
+5. Review the security baseline, delivery path, and decision record for the tradeoffs.
+
+```bash
+uv sync --extra dev --extra aws
+uv run pytest
+uv run evidence-ledger demo --output /tmp/evidence-ledger-demo
+uv run evidence-ledger verify --package /tmp/evidence-ledger-demo/package
+sam validate --template-file infra/template.yaml --lint
+sam build --template-file infra/template.yaml
+AWS_PROFILE=<profile> AWS_REGION=<region> AWS_DEFAULT_REGION=<region> uv run --extra aws python tools/aws_demo.py --stack-name <stack-name> --region <region>
+```
+
+The local path proves deterministic metadata, reconciliation, hash-chain verification,
+and refusal of altered inputs. The AWS path proves encrypted storage, event-driven
+processing, append-only custody records, duplicate protection, and retry exhaustion
+handling. AWS deployment remains manual because it creates external resources and can
+spend money.
+
+The project intentionally does not claim legal admissibility, production availability,
+account-wide security, multi-region recovery, semantic correctness from a model, or
+automatic incident response.
+
+See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md),
+[`docs/AWS_RUNBOOK.md`](docs/AWS_RUNBOOK.md), and
+[`docs/DELIVERY_PATH.md`](docs/DELIVERY_PATH.md) for the review evidence.
