@@ -36,6 +36,13 @@ The custody table:
 - allows the function to write and query events;
 - does not grant the function update or delete permissions.
 
+The failure queue:
+
+- uses SQS-managed server-side encryption;
+- retains failed invocations for 14 days so an operator has time to inspect them;
+- accepts messages from the Lambda execution role only for this queue;
+- is not readable or deletable by the Lambda execution role.
+
 S3 Object Lock is a storage control, not proof that the evidence is legally admissible.
 The demo uses a short retention period so teardown remains possible with the documented
 governance bypass procedure.
@@ -50,6 +57,11 @@ The function:
 - writes metadata and the custody event;
 - logs identifiers and measurements, never source bytes;
 - rejects replayed event identifiers.
+- raises unexpected AWS service failures so Lambda's configured retries and failure
+  destination can operate;
+- returns deterministic input-validation and duplicate refusals as structured results,
+  because retrying a malformed or already-recorded request would add cost without
+  changing the outcome.
 
 The function package contains no credentials or secrets.
 
@@ -62,14 +74,17 @@ The AWS phase must include these checks:
 3. The Lambda role cannot delete a source object.
 4. The Lambda role cannot update or delete a custody event.
 5. Replaying the same event does not create a second ledger record.
-6. Modifying an object makes package verification fail.
-7. Teardown leaves no stack-owned bucket, table, function, or log group.
+6. A synthetic processing failure is attempted three times and then appears in the
+   encrypted failure queue.
+7. Modifying an object makes package verification fail.
+8. Teardown leaves no stack-owned bucket, table, function, queue, or log group.
 
 ## Explicit limits
 
 This baseline does not establish account-wide security. It does not cover organisation
 guardrails, central logging, CloudTrail data events, incident response, multi-account
-separation, a custom KMS key, or a formal security review.
+separation, a custom KMS key, queue monitoring/triage automation, or a formal security
+review.
 
 ## Primary references
 

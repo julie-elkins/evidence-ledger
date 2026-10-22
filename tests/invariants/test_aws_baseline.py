@@ -15,6 +15,10 @@ def test_template_contains_required_security_controls() -> None:
         "NotificationConfiguration:",
         "s3:ObjectCreated:*",
         "Value: incoming/",
+        "MaximumRetryAttempts: 2",
+        "MaximumEventAgeInSeconds: 3600",
+        "SqsManagedSseEnabled: true",
+        "sqs:SendMessage",
         "dynamodb:PutItem",
         "dynamodb:Query",
     ]

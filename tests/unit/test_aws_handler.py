@@ -18,6 +18,21 @@ class FakeS3:
         return {"Body": Body()}
 
 
+class FailingS3:
+    def get_object(self, **kwargs: Any) -> dict[str, Body]:
+        from botocore.exceptions import ClientError
+
+        raise ClientError(
+            {
+                "Error": {
+                    "Code": "ServiceUnavailable",
+                    "Message": "synthetic transient failure",
+                }
+            },
+            "GetObject",
+        )
+
+
 class FakeTable:
     def __init__(self) -> None:
         self.items: list[dict[str, Any]] = []
@@ -138,3 +153,45 @@ def test_lambda_refuses_s3_object_outside_incoming_prefix(
     result = aws_handler.handler(notification, None)
     assert result["status"] == "PARTIAL"
     assert result["results"][0]["code"] == "invalid_s3_notification"
+
+
+def test_lambda_raises_for_the_synthetic_failure_probe(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("EVIDENCE_BUCKET", "synthetic-bucket")
+    monkeypatch.setenv("CUSTODY_TABLE", "synthetic-table")
+    monkeypatch.setenv(
+        "FAILURE_PROBE_KEY",
+        "incoming/matter-001/failure-probe.txt",
+    )
+    event = {
+        "matter_id": "matter-001",
+        "object_key": "incoming/matter-001/failure-probe.txt",
+        "evidence_id": "evidence-001",
+        "actor": "synthetic-reviewer",
+        "occurred_at": "2026-10-22T00:00:00Z",
+    }
+    with pytest.raises(RuntimeError, match="Synthetic failure probe"):
+        aws_handler.handler(event, None)
+
+
+def test_lambda_raises_for_unexpected_aws_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("EVIDENCE_BUCKET", "synthetic-bucket")
+    monkeypatch.setenv("CUSTODY_TABLE", "synthetic-table")
+    monkeypatch.setattr(aws_handler.boto3, "client", lambda name: FailingS3())
+    monkeypatch.setattr(
+        aws_handler.boto3,
+        "resource",
+        lambda name: FakeDynamo(FakeTable()),
+    )
+    event = {
+        "matter_id": "matter-001",
+        "object_key": "incoming/matter-001/file.txt",
+        "evidence_id": "evidence-001",
+        "actor": "synthetic-reviewer",
+        "occurred_at": "2026-10-22T00:00:00Z",
+    }
+    with pytest.raises(RuntimeError, match="ServiceUnavailable"):
+        aws_handler.handler(event, None)

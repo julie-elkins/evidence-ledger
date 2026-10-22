@@ -13,7 +13,9 @@ legal system, compliance certification, or claim of courtroom admissibility.
 
 The local deterministic path is the reference slice. The AWS adapter is deployed as a
 disposable, on-demand event-driven path: an S3 object-created notification invokes Lambda,
-which writes metadata and an append-only custody event to DynamoDB.
+which writes metadata and an append-only custody event to DynamoDB. Lambda retries
+unexpected processing failures twice and sends exhausted events to an encrypted SQS
+dead-letter queue (DLQ), a durable holding queue for failures that need inspection.
 
 ## Run the local path
 
@@ -55,3 +57,6 @@ work becomes a record and that totals carry their denominator.
 AWS-specific decisions are recorded in
 [`docs/AWS_WELL_ARCHITECTED.md`](docs/AWS_WELL_ARCHITECTED.md) and
 [`docs/AWS_SECURITY_BASELINE.md`](docs/AWS_SECURITY_BASELINE.md).
+
+The deployment runbook includes the synthetic failure probe used to verify retries and
+DLQ delivery. The probe is disabled by default and is never intended for real evidence.

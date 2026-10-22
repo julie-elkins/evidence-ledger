@@ -46,8 +46,29 @@ replayed. The explicit notification and permission resources also avoid the circ
 dependency produced by the SAM S3-event shorthand.
 
 **Costs if wrong:** S3 notifications are at-least-once delivery, so duplicate handling
-and asynchronous polling remain necessary. This does not yet demonstrate queue-backed
-retries or dead-letter handling.
+and asynchronous polling remain necessary. A failure queue without an operator or
+consumer does not constitute incident response; it preserves the event for inspection
+but does not resolve it.
+
+**Decided by:** Julie Elkins and Codex, 2026-10-22.
+
+## Failure handling
+
+**Decided:** Raise unexpected processing failures, retry them twice, and send exhausted
+events to one encrypted SQS dead-letter queue (DLQ).
+
+**Instead of:** Returning every AWS service error as a normal structured refusal or
+building a continuously running queue consumer.
+
+**Why:** A transient service failure needs a chance to recover, while a permanently
+failing invocation needs durable evidence of the failure rather than silent loss. The
+queue preserves the original invocation and error for an operator without adding an
+always-on worker or a second processing path. Input-validation failures and duplicate
+events remain structured refusals because retrying them cannot change their outcome.
+
+**Costs if wrong:** The queue can accumulate failed events without automatic remediation,
+and the 14-day retention window creates a small ongoing storage obligation. Production
+would need alerting, ownership, replay policy, and a tested redrive process.
 
 **Decided by:** Julie Elkins and Codex, 2026-10-22.
 

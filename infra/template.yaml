@@ -9,6 +9,10 @@ Parameters:
     MinValue: 1
     MaxValue: 7
     Description: Short governance retention for the synthetic demo only.
+  FailureProbeKey:
+    Type: String
+    Default: ""
+    Description: Exact synthetic object key that intentionally raises for DLQ testing.
 
 Resources:
   EvidenceBucket:
@@ -108,6 +112,10 @@ Resources:
                   - dynamodb:PutItem
                   - dynamodb:Query
                 Resource: !GetAtt CustodyTable.Arn
+              - Sid: SendFailedEventsToQueue
+                Effect: Allow
+                Action: sqs:SendMessage
+                Resource: !GetAtt ProcessorFailureQueue.Arn
               - Sid: WriteOwnLogs
                 Effect: Allow
                 Action:
@@ -129,6 +137,14 @@ Resources:
         Variables:
           EVIDENCE_BUCKET: !Sub evidence-ledger-${AWS::AccountId}-${AWS::Region}-${AWS::StackName}
           CUSTODY_TABLE: !Ref CustodyTable
+          FAILURE_PROBE_KEY: !Ref FailureProbeKey
+      EventInvokeConfig:
+        MaximumEventAgeInSeconds: 3600
+        MaximumRetryAttempts: 2
+        DestinationConfig:
+          OnFailure:
+            Type: SQS
+            Destination: !GetAtt ProcessorFailureQueue.Arn
 
   ProcessorEvidenceCreatedPermission:
     Type: AWS::Lambda::Permission
@@ -138,6 +154,15 @@ Resources:
       Principal: s3.amazonaws.com
       SourceAccount: !Ref AWS::AccountId
       SourceArn: !Sub arn:${AWS::Partition}:s3:::evidence-ledger-${AWS::AccountId}-${AWS::Region}-${AWS::StackName}
+
+  ProcessorFailureQueue:
+    Type: AWS::SQS::Queue
+    DeletionPolicy: Delete
+    UpdateReplacePolicy: Delete
+    Properties:
+      QueueName: !Sub "${AWS::StackName}-processor-failures"
+      MessageRetentionPeriod: 1209600
+      SqsManagedSseEnabled: true
 
   ProcessorLogGroup:
     Type: AWS::Logs::LogGroup
@@ -154,3 +179,7 @@ Outputs:
     Value: !Ref CustodyTable
   ProcessorFunctionName:
     Value: !Ref Processor
+  FailureQueueUrl:
+    Value: !Ref ProcessorFailureQueue
+  FailureQueueArn:
+    Value: !GetAtt ProcessorFailureQueue.Arn

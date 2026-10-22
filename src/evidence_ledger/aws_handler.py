@@ -77,6 +77,9 @@ def _process_request(event: dict[str, Any]) -> dict[str, Any]:
             f"Provide: {', '.join(missing)}.",
         )
     bucket = os.environ["EVIDENCE_BUCKET"]
+    failure_probe_key = os.environ.get("FAILURE_PROBE_KEY", "")
+    if failure_probe_key and event["object_key"] == failure_probe_key:
+        raise RuntimeError("Synthetic failure probe triggered.")
     s3 = boto3.client("s3")
     table = boto3.resource("dynamodb").Table(os.environ["CUSTODY_TABLE"])
     try:
@@ -136,11 +139,9 @@ def _process_request(event: dict[str, Any]) -> dict[str, Any]:
                 "The event id already exists in the custody ledger.",
                 "Treat the replay as already recorded; do not create a new event.",
             )
-        return _refusal(
-            "aws_operation_failed",
-            f"AWS rejected the bounded operation: {error_code or 'unknown_error'}.",
-            "Inspect the deployment permissions and retry with the same event identity.",
-        )
+        raise RuntimeError(
+            f"AWS rejected the bounded operation: {error_code or 'unknown_error'}."
+        ) from error
 
 
 def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
