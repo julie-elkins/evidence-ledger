@@ -27,8 +27,22 @@ account and region are external state, not a local test fixture.
 
 ```bash
 aws sts get-caller-identity
-aws cloudformation deploy --template-file .aws-sam/build/template.yaml --stack-name <stack-name> --capabilities CAPABILITY_IAM --region <region>
+sam deploy --template-file .aws-sam/build/template.yaml --stack-name <stack-name> --s3-bucket <deployment-bucket> --role-arn <cloudformation-service-role-arn> --capabilities CAPABILITY_IAM --region <region>
 ```
+
+For the retained portfolio stack, the current values are:
+
+```bash
+AWS_PROFILE=evidence-ledger-console AWS_REGION=us-east-2 AWS_DEFAULT_REGION=us-east-2 aws sts get-caller-identity --region us-east-2
+AWS_PROFILE=evidence-ledger-console AWS_REGION=us-east-2 AWS_DEFAULT_REGION=us-east-2 sam deploy --template-file .aws-sam/build/template.yaml --stack-name el-20261022 --s3-bucket evidence-ledger-deploy-262250696140-us-east-2 --role-arn arn:aws:iam::262250696140:role/EvidenceLedgerDeploymentRole --capabilities CAPABILITY_IAM --parameter-overrides RetentionDays=1 --no-confirm-changeset --no-fail-on-empty-changeset --region us-east-2
+```
+
+`EvidenceLedgerDeploymentRole` is a CloudFormation service role, meaning CloudFormation
+uses its scoped policy to create or update the stack resources. Its trust policy and
+permissions are stored in `infra/deployment-role-trust-policy.json` and
+`infra/deployment-role-policy.json`. The current console-backed profile is a bootstrap
+path only; replace the root session with an IAM Identity Center or other non-root
+principal before treating this as a routine deployment workflow.
 
 The stack creates one S3 bucket, one DynamoDB table, one Lambda function, one IAM role,
 and one short-retention CloudWatch log group. It does not create a NAT gateway, RDS
