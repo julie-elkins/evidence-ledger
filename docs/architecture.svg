@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="820" viewBox="0 0 1440 820" role="img" aria-labelledby="title desc">
+  <title id="title">Evidence Ledger architecture</title>
+  <desc id="desc">Synthetic inputs feed a deterministic local pipeline and a cloud path using S3, Lambda, DynamoDB, CloudWatch Logs, and an encrypted SQS dead-letter queue. Unexpected Lambda failures retry twice before reaching the queue.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+    </marker>
+    <marker id="failure-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#b45309"/>
+    </marker>
+    <style>
+      .title { font: 700 30px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #0f172a; }
+      .subtitle { font: 400 16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #475569; }
+      .section { font: 700 17px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #0f172a; }
+      .node-title { font: 700 16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #0f172a; }
+      .node-copy { font: 400 13px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #475569; }
+      .edge-label { font: 600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #475569; }
+      .failure-label { font: 600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #92400e; }
+    </style>
+  </defs>
+
+  <rect width="1440" height="820" fill="#f8fafc"/>
+  <text x="72" y="70" class="title">Evidence Ledger architecture</text>
+  <text x="72" y="101" class="subtitle">Deterministic evidence contract with a bounded, event-driven AWS adapter</text>
+
+  <rect x="56" y="138" width="554" height="560" rx="18" fill="#eef2ff" stroke="#c7d2fe" stroke-width="2"/>
+  <text x="88" y="180" class="section">Local reference path</text>
+  <text x="88" y="207" class="node-copy">No AWS account, credentials, or model provider required</text>
+
+  <rect x="92" y="256" width="220" height="100" rx="12" fill="#ffffff" stroke="#94a3b8" stroke-width="2"/>
+  <text x="112" y="291" class="node-title">Synthetic inputs</text>
+  <text x="112" y="317" class="node-copy">Committed fixtures only</text>
+  <text x="112" y="338" class="node-copy">No source bytes in reports</text>
+
+  <rect x="358" y="256" width="218" height="100" rx="12" fill="#ffffff" stroke="#6366f1" stroke-width="2"/>
+  <text x="378" y="291" class="node-title">Deterministic pipeline</text>
+  <text x="378" y="317" class="node-copy">Explicit outcomes and totals</text>
+  <text x="378" y="338" class="node-copy">Stable hashes and timestamps</text>
+
+  <path d="M 312 306 H 350" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <rect x="190" y="446" width="286" height="112" rx="12" fill="#ffffff" stroke="#6366f1" stroke-width="2"/>
+  <text x="210" y="482" class="node-title">Verified package</text>
+  <text x="210" y="509" class="node-copy">Metadata, fingerprints, custody events</text>
+  <text x="210" y="530" class="node-copy">Alteration and omission are refusals</text>
+  <path d="M 467 356 C 467 400 333 405 333 438" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <rect x="646" y="138" width="738" height="560" rx="18" fill="#ecfdf5" stroke="#a7f3d0" stroke-width="2"/>
+  <text x="678" y="180" class="section">AWS event path</text>
+  <text x="678" y="207" class="node-copy">Synthetic deployment; one region; no always-on worker</text>
+
+  <rect x="680" y="256" width="190" height="100" rx="12" fill="#ffffff" stroke="#0f766e" stroke-width="2"/>
+  <text x="700" y="291" class="node-title">S3 incoming/</text>
+  <text x="700" y="317" class="node-copy">Versioned, encrypted object</text>
+  <text x="700" y="338" class="node-copy">ObjectCreated notification</text>
+
+  <rect x="925" y="256" width="190" height="100" rx="12" fill="#ffffff" stroke="#0f766e" stroke-width="2"/>
+  <text x="945" y="291" class="node-title">Lambda processor</text>
+  <text x="945" y="317" class="node-copy">Hash in memory</text>
+  <text x="945" y="338" class="node-copy">Metadata-only logging</text>
+
+  <rect x="1170" y="256" width="180" height="100" rx="12" fill="#ffffff" stroke="#0f766e" stroke-width="2"/>
+  <text x="1190" y="291" class="node-title">DynamoDB ledger</text>
+  <text x="1190" y="317" class="node-copy">Append-only event</text>
+  <text x="1190" y="338" class="node-copy">Duplicate refusal</text>
+
+  <path d="M 870 306 H 917" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="884" y="286" class="edge-label">event</text>
+  <path d="M 1115 306 H 1162" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="1120" y="286" class="edge-label">write</text>
+
+  <rect x="925" y="446" width="190" height="100" rx="12" fill="#fff7ed" stroke="#f59e0b" stroke-width="2"/>
+  <text x="945" y="481" class="node-title">Retry policy</text>
+  <text x="945" y="507" class="node-copy">Unexpected failures</text>
+  <text x="945" y="528" class="node-copy">Original + two retries</text>
+
+  <rect x="1170" y="446" width="180" height="100" rx="12" fill="#fff7ed" stroke="#b45309" stroke-width="2"/>
+  <text x="1190" y="481" class="node-title">Encrypted SQS DLQ</text>
+  <text x="1190" y="507" class="node-copy">Failed invocation envelope</text>
+  <text x="1190" y="528" class="node-copy">Operator inspection</text>
+
+  <path d="M 1020 356 V 438" fill="none" stroke="#b45309" stroke-width="2" marker-end="url(#failure-arrow)"/>
+  <text x="1034" y="407" class="failure-label">failure</text>
+  <path d="M 1115 496 H 1162" fill="none" stroke="#b45309" stroke-width="2" marker-end="url(#failure-arrow)"/>
+  <text x="1123" y="476" class="failure-label">exhausted</text>
+  <path d="M 925 496 C 830 496 830 379 1010 379 C 1060 379 1060 364 1020 356" fill="none" stroke="#b45309" stroke-width="2" stroke-dasharray="7 6" marker-end="url(#failure-arrow)"/>
+  <text x="757" y="426" class="failure-label">retry twice</text>
+
+  <rect x="680" y="446" width="190" height="100" rx="12" fill="#ffffff" stroke="#64748b" stroke-width="2"/>
+  <text x="700" y="481" class="node-title">CloudWatch Logs</text>
+  <text x="700" y="507" class="node-copy">Identifiers and statuses</text>
+  <text x="700" y="528" class="node-copy">Never source bytes</text>
+  <path d="M 925 346 C 870 386 820 410 775 438" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <path d="M 476 502 H 610 C 635 502 635 586 680 586" fill="none" stroke="#6366f1" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arrow)"/>
+  <text x="493" y="487" class="edge-label">same metadata boundary</text>
+
+  <text x="72" y="760" class="subtitle">The optional LLM lane may recommend metadata triage; it cannot alter evidence or verification results.</text>
+</svg>

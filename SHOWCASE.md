@@ -6,6 +6,8 @@ auditable: the system can show what it checked, what it refused, and why.
 It is not a legal system. It does not decide relevance, privilege, admissibility, or
 whether an export should be approved. Those limits are part of the design.
 
+![Evidence Ledger architecture](docs/architecture.svg)
+
 ## What to notice
 
 The project keeps the deterministic evidence contract separate from the optional model
