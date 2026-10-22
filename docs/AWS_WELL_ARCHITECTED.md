@@ -53,7 +53,8 @@ not claim large-scale performance from a portfolio fixture.
 ## Cost optimization
 
 - No NAT gateway, RDS cluster, OpenSearch domain, queue consumer, or always-on API.
-- Lambda is invoked only by the demo.
+- Lambda is invoked by an S3 `ObjectCreated` notification filtered to the `incoming/`
+  prefix; the demo performs one direct replay only to verify idempotency.
 - DynamoDB uses on-demand capacity.
 - CloudWatch log retention is short.
 - Teardown deletes the disposable stack and checks for remaining resources.

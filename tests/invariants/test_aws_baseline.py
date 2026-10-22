@@ -12,6 +12,9 @@ def test_template_contains_required_security_controls() -> None:
         "SSEAlgorithm: AES256",
         "Status: Enabled",
         "aws:SecureTransport: false",
+        "NotificationConfiguration:",
+        "s3:ObjectCreated:*",
+        "Value: incoming/",
         "dynamodb:PutItem",
         "dynamodb:Query",
     ]

@@ -13,6 +13,7 @@ Parameters:
 Resources:
   EvidenceBucket:
     Type: AWS::S3::Bucket
+    DependsOn: ProcessorEvidenceCreatedPermission
     DeletionPolicy: Delete
     UpdateReplacePolicy: Delete
     Properties:
@@ -35,6 +36,15 @@ Resources:
               SSEAlgorithm: AES256
       VersioningConfiguration:
         Status: Enabled
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Event: s3:ObjectCreated:*
+            Function: !GetAtt Processor.Arn
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: incoming/
 
   EvidenceBucketPolicy:
     Type: AWS::S3::BucketPolicy
@@ -91,7 +101,7 @@ Resources:
               - Sid: ReadIncomingObjects
                 Effect: Allow
                 Action: s3:GetObject
-                Resource: !Sub "${EvidenceBucket.Arn}/incoming/*"
+                Resource: !Sub "arn:${AWS::Partition}:s3:::evidence-ledger-${AWS::AccountId}-${AWS::Region}-${AWS::StackName}/incoming/*"
               - Sid: WriteAndQueryCustody
                 Effect: Allow
                 Action:
@@ -117,8 +127,17 @@ Resources:
       Role: !GetAtt ProcessorRole.Arn
       Environment:
         Variables:
-          EVIDENCE_BUCKET: !Ref EvidenceBucket
+          EVIDENCE_BUCKET: !Sub evidence-ledger-${AWS::AccountId}-${AWS::Region}-${AWS::StackName}
           CUSTODY_TABLE: !Ref CustodyTable
+
+  ProcessorEvidenceCreatedPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref Processor
+      Action: lambda:InvokeFunction
+      Principal: s3.amazonaws.com
+      SourceAccount: !Ref AWS::AccountId
+      SourceArn: !Sub arn:${AWS::Partition}:s3:::evidence-ledger-${AWS::AccountId}-${AWS::Region}-${AWS::StackName}
 
   ProcessorLogGroup:
     Type: AWS::Logs::LogGroup

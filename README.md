@@ -11,8 +11,9 @@ legal system, compliance certification, or claim of courtroom admissibility.
 
 ## Current status
 
-The local deterministic path is the first working slice. The AWS deployment is planned as
-the next adapter and will use only disposable, on-demand resources.
+The local deterministic path is the reference slice. The AWS adapter is deployed as a
+disposable, on-demand event-driven path: an S3 object-created notification invokes Lambda,
+which writes metadata and an append-only custody event to DynamoDB.
 
 ## Run the local path
 

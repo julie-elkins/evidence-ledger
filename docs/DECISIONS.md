@@ -33,6 +33,24 @@ actions are not yet restricted to one stack ARN.
 
 **Decided by:** Julie Elkins and Codex, 2026-10-22.
 
+## AWS ingestion trigger
+
+**Decided:** Use an S3 `ObjectCreated` notification filtered to `incoming/` as the
+production-shaped AWS ingestion path.
+
+**Instead of:** Keeping Lambda invocation only inside the demo script.
+
+**Why:** The deployed path should prove that storage events cross the trust boundary,
+reach the processor automatically, and remain idempotent when the same request is
+replayed. The explicit notification and permission resources also avoid the circular
+dependency produced by the SAM S3-event shorthand.
+
+**Costs if wrong:** S3 notifications are at-least-once delivery, so duplicate handling
+and asynchronous polling remain necessary. This does not yet demonstrate queue-backed
+retries or dead-letter handling.
+
+**Decided by:** Julie Elkins and Codex, 2026-10-22.
+
 ## Cloud resources
 
 **Decided:** Use disposable, on-demand AWS resources and avoid always-on services.

@@ -54,8 +54,9 @@ cluster, OpenSearch domain, API Gateway, or continuously running worker.
 uv run --extra aws python tools/aws_demo.py --stack-name <stack-name> --region <region>
 ```
 
-The script uploads only `examples/good-matter/input`, invokes the Lambda sequentially,
-and prints identifiers, statuses, counts, and hashes. It does not print source bytes.
+The script uploads only `examples/good-matter/input`, waits for S3 notifications to invoke
+Lambda, replays each resulting request once to verify duplicate refusal, and prints
+identifiers, statuses, counts, and hashes. It does not print source bytes.
 
 ## Inspect and tear down
 

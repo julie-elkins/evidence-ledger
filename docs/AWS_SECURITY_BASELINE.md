@@ -11,8 +11,9 @@ the source rather than treating this document as authority.
 ## Identity and access
 
 The deployment uses temporary credentials supplied by the operator's AWS CLI session. It
-does not create IAM users or store access keys. The Lambda function has its own role, and
-the role is scoped to the named Evidence Ledger bucket, custody table, and log group.
+does not create IAM users or store access keys. CloudFormation uses a separate service
+role whose policy is stored in the repository. The Lambda function has its own role, and
+that role is scoped to the named Evidence Ledger bucket, custody table, and log group.
 
 The deployer and the Lambda execution role are separate identities. The Lambda role cannot
 create IAM resources, deploy code, delete evidence, or update custody events.
