@@ -92,5 +92,6 @@ account-wide security, multi-region recovery, semantic correctness from a model,
 automatic incident response.
 
 See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md),
+[`SHOWCASE.md`](SHOWCASE.md),
 [`docs/AWS_RUNBOOK.md`](docs/AWS_RUNBOOK.md), and
 [`docs/DELIVERY_PATH.md`](docs/DELIVERY_PATH.md) for the review evidence.

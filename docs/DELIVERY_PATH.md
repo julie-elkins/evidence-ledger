@@ -13,18 +13,20 @@
 
 ## GitHub repository check
 
-Checked against the public repository on 2026-10-22:
+Configured on 2026-10-22:
 
-- The `main` branch is not protected.
-- The CI workflow exists, but GitHub does not currently enforce it as a required status
-  check before merge.
-- No deployment approval owner is recorded in repository configuration.
+- The `main` branch is protected.
+- The `verify` CI job is a required status check before merge.
+- Branches must be up to date before merging.
+- Administrator bypass is disabled.
+- Force-pushes and branch deletion are disabled.
+- Linear history and conversation resolution are required.
+- Required approvals are intentionally not enabled because this repository currently has
+  one maintainer; enabling them would block that maintainer from merging fixes.
 
-Branch protection means GitHub blocks a merge until selected checks pass. It is a shared
-repository setting, so this project documents the gap but does not change it from code.
-The recommended manual hardening is to protect `main`, require the CI job named `verify`,
-require branches to be up to date before merging, and require approval from a second
-reviewer when the repository has another maintainer.
+Branch protection means GitHub blocks a merge until selected checks pass. The rule protects
+the delivery path without adding a second reviewer requirement that the current ownership
+model cannot satisfy.
 
 ## Not yet checkable from the repository
 
